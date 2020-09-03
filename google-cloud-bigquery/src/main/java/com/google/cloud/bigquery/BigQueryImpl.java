@@ -321,7 +321,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     // Since that affects a bunch of APIs, we should fix this as a separate change.
     try {
       try {
-        return Job.fromPb(
+        Job job = Job.fromPb(
             this,
             runWithRetries(
                 new Callable<com.google.api.services.bigquery.model.Job>() {
@@ -333,6 +333,8 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 getOptions().getRetrySettings(),
                 EXCEPTION_HANDLER,
                 getOptions().getClock()));
+
+        return job;
       } catch (RetryHelper.RetryHelperException e) {
         throw BigQueryException.translateAndThrow(e);
       }

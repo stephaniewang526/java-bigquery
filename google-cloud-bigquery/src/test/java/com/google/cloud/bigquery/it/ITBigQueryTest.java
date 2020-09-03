@@ -1384,6 +1384,13 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testMultipleStatementsQuery() throws InterruptedException {
+    String query = "INSERT test_dataset_1234.testquery1(c1, c2) VALUES(3,'update'); DELETE test_dataset_1234.testquery1 where c2=3;";
+    Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.of(query))).waitFor();
+    System.out.println(job);
+  }
+
+  @Test
   public void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
