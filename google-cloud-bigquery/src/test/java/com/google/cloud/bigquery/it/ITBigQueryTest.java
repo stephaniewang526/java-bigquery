@@ -1391,6 +1391,27 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testMultipleStatementsQueryException() throws InterruptedException {
+    try
+    {
+      String query = "INSERT test_dataset_1234.testquery1(c1, c2) VALUES('3', 10); DELETE test_dataset_1234.testquery1 where c2=3;";
+      // JobId jobId = JobId.of(UUID.randomUUID().toString());
+      Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.of(query))).waitFor();
+
+      if (job.getStatus().getError() != null)
+      {
+        System.out.println(job.getStatus().getExecutionErrors());
+        System.out.println(job.getStatus().getError());
+      }
+
+    }
+    catch (Exception e)
+    {
+      System.out.println("Exception found" + e.getMessage());
+    }
+  }
+
+  @Test
   public void testQuery() throws InterruptedException {
     String query = "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID.getTable();
     QueryJobConfiguration config =
