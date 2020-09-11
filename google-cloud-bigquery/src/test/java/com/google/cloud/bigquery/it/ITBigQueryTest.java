@@ -65,6 +65,7 @@ import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.InsertAllRequest;
 import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobException;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatistics;
@@ -1384,30 +1385,35 @@ public class ITBigQueryTest {
   }
 
   @Test
-  public void testMultipleStatementsQuery() throws InterruptedException {
-    String query = "INSERT test_dataset_1234.testquery1(c1, c2) VALUES(3,'update'); DELETE test_dataset_1234.testquery1 where c2=3;";
-    Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.of(query))).waitFor();
-    System.out.println(job);
+  public void testSingleStatementsQueryException() throws InterruptedException {
+    String invalidQuery =
+        String.format("INSERT %s.%s VALUES('3', 10);", DATASET, TABLE_ID.getTable());
+    try {
+      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+      fail("BigQueryException was expected");
+    } catch (BigQueryException e) {
+      BigQueryError error = e.getError();
+      assertNotNull(error);
+      assertEquals("invalidQuery", error.getReason());
+      assertNotNull(error.getMessage());
+    }
   }
 
   @Test
   public void testMultipleStatementsQueryException() throws InterruptedException {
-    try
-    {
-      String query = "INSERT test_dataset_1234.testquery1(c1, c2) VALUES('3', 10); DELETE test_dataset_1234.testquery1 where c2=3;";
-      // JobId jobId = JobId.of(UUID.randomUUID().toString());
-      Job job = bigquery.create(JobInfo.of(QueryJobConfiguration.of(query))).waitFor();
-
-      if (job.getStatus().getError() != null)
-      {
-        System.out.println(job.getStatus().getExecutionErrors());
-        System.out.println(job.getStatus().getError());
+    String invalidQuery =
+        String.format(
+            "INSERT %s.%s VALUES('3', 10); DELETE %s.%s where c2=3;",
+            DATASET, TABLE_ID.getTable(), DATASET, TABLE_ID.getTable());
+    try {
+      bigquery.create(JobInfo.of(QueryJobConfiguration.of(invalidQuery))).waitFor();
+      fail("JobException was expected");
+    } catch (JobException e) {
+      for (BigQueryError error : e.getErrors()) {
+        assertNotNull(error);
+        assertEquals("invalidQuery", error.getReason());
+        assertNotNull(error.getMessage());
       }
-
-    }
-    catch (Exception e)
-    {
-      System.out.println("Exception found" + e.getMessage());
     }
   }
 
