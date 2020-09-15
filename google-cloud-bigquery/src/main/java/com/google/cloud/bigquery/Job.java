@@ -245,21 +245,6 @@ public class Job extends JobInfo {
           waitForJob(RetryOption.mergeToSettings(DEFAULT_QUERY_JOB_WAIT_SETTINGS, waitOptions));
     }
 
-    // Get the job resource to determine if it has errored.
-    Job job = this;
-    if (job.getStatus() == null || !JobStatus.State.DONE.equals(job.getStatus().getState())) {
-      // TODO: check to see if we must reload here
-      job = reload();
-    }
-    if (job.getStatus() != null && job.getStatus().getError() != null) {
-      // TODO(pmakani/stephwang): Change to BigQueryException when fast query path change is merged
-      throw new JobException(
-          getJobId(),
-          job.getStatus().getExecutionErrors() == null
-              ? ImmutableList.of(job.getStatus().getError())
-              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
-    }
-
     return completedJobResponse == null ? null : reload();
   }
 
@@ -416,7 +401,16 @@ public class Job extends JobInfo {
    */
   public Job reload(JobOption... options) {
     checkNotDryRun("reload");
-    return bigquery.getJob(getJobId(), options);
+    Job job = bigquery.getJob(getJobId(), options);
+    if (job != null && job.getStatus().getError() != null) {
+      // TODO(pmakani): change to BigQueryException when fast query path change is merged
+      throw new JobException(
+          getJobId(),
+          job.getStatus().getExecutionErrors() == null
+              ? ImmutableList.of(job.getStatus().getError())
+              : ImmutableList.copyOf(job.getStatus().getExecutionErrors()));
+    }
+    return job;
   }
 
   /**
