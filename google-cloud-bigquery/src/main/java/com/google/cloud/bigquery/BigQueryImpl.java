@@ -1269,9 +1269,9 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
     Schema schema;
     if (results.getSchema() == null && results.getJobComplete()) {
       JobId jobId = JobId.fromPb(results.getJobReference());
-      QueryResponse result = getQueryResults(jobId, getOptions(), optionMap(options));
-      numRows = result.getTotalRows();
-      schema = result.getSchema();
+      QueryResponse queryResults = getQueryResults(jobId, getOptions(), optionMap(options));
+      numRows = queryResults.getTotalRows();
+      schema = queryResults.getSchema();
     } else {
       schema = Schema.fromPb(results.getSchema());
       if (results.getNumDmlAffectedRows() == null && results.getTotalRows() == null) {
