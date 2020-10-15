@@ -1609,6 +1609,69 @@ public class ITBigQueryTest {
   }
 
   @Test
+  public void testFastQuerySinglePageDuplicateRequestIds() throws InterruptedException {
+    String query =
+        "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
+    QueryJobConfiguration config =
+        QueryJobConfiguration.newBuilder(query).setDefaultDataset(DatasetId.of(DATASET)).build();
+    TableResult result = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result.getSchema());
+    assertEquals(2, result.getTotalRows());
+    for (FieldValueList row : result.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+    assertNull(result.getNextPage());
+    assertNull(result.getNextPageToken());
+    assertFalse(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result1.getSchema());
+    assertEquals(2, result1.getTotalRows());
+    for (FieldValueList row : result1.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      System.out.println(timestampCell);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+    assertNull(result1.getNextPage());
+    assertNull(result1.getNextPageToken());
+    assertFalse(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(QUERY_RESULT_SCHEMA, result2.getSchema());
+    assertEquals(2, result2.getTotalRows());
+    for (FieldValueList row : result2.getValues()) {
+      FieldValue timestampCell = row.get(0);
+      assertEquals(timestampCell, row.get("TimestampField"));
+      FieldValue stringCell = row.get(1);
+      assertEquals(stringCell, row.get("StringField"));
+      FieldValue booleanCell = row.get(2);
+      assertEquals(booleanCell, row.get("BooleanField"));
+      assertEquals(1408452095220000L, timestampCell.getTimestampValue());
+      assertEquals("stringValue", stringCell.getStringValue());
+      assertEquals(false, booleanCell.getBooleanValue());
+    }
+    assertNull(result2.getNextPage());
+    assertNull(result2.getNextPageToken());
+    assertFalse(result2.hasNextPage());
+  }
+
+  @Test
   public void testFastSQLQuery() throws InterruptedException {
     String query =
         "SELECT TimestampField, StringField, BooleanField FROM " + TABLE_ID_FASTQUERY.getTable();
@@ -1650,6 +1713,21 @@ public class ITBigQueryTest {
     assertNotNull(result.getNextPage());
     assertNotNull(result.getNextPageToken());
     assertTrue(result.hasNextPage());
+
+    TableResult result1 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result.getSchema());
+    assertEquals(313348, result.getTotalRows());
+    assertNotNull(result1.getNextPage());
+    assertNotNull(result1.getNextPageToken());
+    assertTrue(result1.hasNextPage());
+
+    config.toBuilder().setQuery(query).build();
+    TableResult result2 = bigquery.query(config);
+    assertEquals(LARGE_TABLE_SCHEMA, result2.getSchema());
+    assertEquals(313348, result2.getTotalRows());
+    assertNotNull(result2.getNextPage());
+    assertNotNull(result2.getNextPageToken());
+    assertTrue(result2.hasNextPage());
   }
 
   @Test
