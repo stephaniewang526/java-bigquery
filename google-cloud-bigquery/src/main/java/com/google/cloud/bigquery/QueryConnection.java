@@ -157,7 +157,8 @@ public interface QueryConnection {
    * @param queryParameters queryParameters or {@code null} for none
    */
   /* TODO: bigquerystorage parameters **/
-  void setQueryParameters(List<QueryParameter> queryParameters) throws BigQuerySQLException;
+  void setBigQueryStorageClientParameters(List<QueryParameter> queryParameters)
+      throws BigQuerySQLException;
 
   /**
    * Execute a SQL statement that returns a single BigQueryResultSet

@@ -27,7 +27,6 @@ public interface BigQueryResultSet {
    */
   long getTotalRows();
 
-  /**
-   * Returns the next page of result set. Null if there is no more pages left. */
+  /** Returns the next page of result set. Null if there is no more pages left. */
   BigQueryResultSet getNextPage();
 }
