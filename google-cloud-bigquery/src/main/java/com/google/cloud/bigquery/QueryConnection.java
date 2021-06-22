@@ -17,9 +17,7 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.QueryParameter;
-import java.sql.ResultSet;
 import java.sql.SQLClientInfoException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -29,11 +27,19 @@ import java.util.Map;
  */
 public interface QueryConnection {
 
-  /** Sets the timeout for query request */
-  void setSynchronousResponseTimeout(Long timeout);
+  /**
+   * Sets how long to wait for the query to complete, in milliseconds, before the request times out
+   * and returns. Note that this is only a timeout for the request, not the query. If the query
+   * takes longer to run than the timeout value, the call returns without any results and with the
+   * 'jobComplete' flag set to false. You can call GetQueryResults() to wait for the query to
+   * complete and read the results. The default value is 10000 milliseconds (10 seconds).
+   *
+   * @param timeoutMs or {@code null} for none
+   */
+  void setSynchronousResponseTimeoutMs(Long timeoutMs) throws BigQuerySQLException;
 
-  /** Returns the timeout associated with this query */
-  Long getSynchronousResponseTimeout();
+  /** Returns the synchronous response timeoutMs associated with this query */
+  Long getSynchronousResponseTimeoutMs() throws BigQuerySQLException;
 
   /**
    * Sets a connection-level property to customize query behavior. Under JDBC, these correspond
@@ -41,29 +47,20 @@ public interface QueryConnection {
    *
    * @param connectionProperties connectionProperties or {@code null} for none
    */
-  void setConnectionProperties(List<ConnectionProperty> connectionProperties);
+  void setConnectionProperties(List<ConnectionProperty> connectionProperties)
+      throws BigQuerySQLException;
 
   /** Returns the connection properties for connection string with this query */
-  List<ConnectionProperty> getConnectionProperties();
+  List<ConnectionProperty> getConnectionProperties() throws BigQuerySQLException;
 
   /**
    * Sets the default dataset. This dataset is used for all unqualified table names used in the
    * query.
    */
-  void setDefaultDataset();
+  void setDefaultDataset() throws BigQuerySQLException;
 
   /** Returns the default dataset */
-  DatasetId getDefaultDataset();
-
-  /**
-   * Sets whether the query has to be dry run or not. If set, the query is not executed. A valid
-   * query will return a mostly empty response with some processing statistics, while an invalid
-   * query will return the same error it would if it wasn't a dry run.
-   */
-  void setDryRun();
-
-  /** Returns whether the query has to be dry run or not */
-  Boolean getDryRun();
+  DatasetId getDefaultDataset() throws BigQuerySQLException;
 
   /**
    * Sets the labels associated with this query. You can use these to organize and group your
@@ -74,13 +71,13 @@ public interface QueryConnection {
    *
    * @param labels labels or {@code null} for none
    */
-  void setLabels(Map<String, String> labels);
+  void setLabels(Map<String, String> labels) throws BigQuerySQLException;
 
   /** Returns the labels associated with this query */
-  Map<String, String> getLabels();
+  Map<String, String> getLabels() throws BigQuerySQLException;
 
   /** Clear the labels associated with this query */
-  void cleaLabels();
+  void cleaLabels() throws BigQuerySQLException;
 
   /**
    * Limits the bytes billed for this job. Queries that will have bytes billed beyond this limit
@@ -89,10 +86,10 @@ public interface QueryConnection {
    *
    * @param maximumBytesBilled maximum bytes billed for this job
    */
-  void setMaximumBytesBilled(Long maximumBytesBilled);
+  void setMaximumBytesBilled(Long maximumBytesBilled) throws BigQuerySQLException;
 
   /** Returns the limits the bytes billed for this job */
-  Long getMaximumBytesBilled();
+  Long getMaximumBytesBilled() throws BigQuerySQLException;
 
   /**
    * Sets the maximum number of rows of data to return per page of results. Setting this flag to a
@@ -102,20 +99,13 @@ public interface QueryConnection {
    *
    * @param maxResults maxResults or {@code null} for none
    */
-  void setMaxResults(Long maxResults);
+  void setMaxResults(Long maxResults) throws BigQuerySQLException;
 
   /** Returns the maximum number of rows of data */
-  Long getMaxResults();
-
-  /**
-   * Sets query parameters for standard SQL queries.
-   *
-   * @param queryParameters queryParameters or {@code null} for none
-   */
-  void setQueryParameters(List<QueryParameter> queryParameters);
+  Long getMaxResults() throws BigQuerySQLException;
 
   /** Returns query parameters for standard SQL queries */
-  List<QueryParameter> getQueryParameters();
+  List<QueryParameter> getQueryParameters() throws BigQuerySQLException;
 
   /**
    * Sets whether to look for the result in the query cache. The query cache is a best-effort cache
@@ -125,24 +115,10 @@ public interface QueryConnection {
    *
    * @see <a href="https://cloud.google.com/bigquery/querying-data#querycaching">Query Caching</a>
    */
-  void setUseQueryCache(Boolean useQueryCache);
+  void setUseQueryCache(Boolean useQueryCache) throws BigQuerySQLException;
 
   /** Returns whether to look for the result in the query cache */
-  Boolean getUseQueryCache();
-
-  /**
-   * Sets whether to use BigQuery's legacy SQL dialect for this query. By default this property is
-   * set to {@code false}. If set to {@code false}, the query will use BigQuery's <a
-   * href="https://cloud.google.com/bigquery/sql-reference/">Standard SQL</a>. When set to {@code
-   * false}, the values of {@link #allowLargeResults()} and {@link #flattenResults()} are ignored;
-   * query will be run as if {@link #allowLargeResults()} is {@code true} and {@link
-   * #flattenResults()} is {@code false}. If set to {@code null} or {@code true}, legacy SQL dialect
-   * is used. This property is experimental and might be subject to change.
-   */
-  void setUseLegacySql(Boolean useLegacySql);
-
-  /** Returns whether to use BigQuery's legacy SQL dialect for this query */
-  Boolean getUseLegacySql();
+  Boolean getUseQueryCache() throws BigQuerySQLException;
 
   /**
    * Sets the value of the client info property specified by name to the value specified by value.
@@ -153,6 +129,7 @@ public interface QueryConnection {
    * @exception SQLClientInfoException if the BigQuery server returns an error while setting the
    *     client info value on the BigQuery server or this method is called on a closed connection
    */
+  // TODO: DETERMINE IF THIS IS NEEDED
   void setClientInfo(String name, String value) throws SQLClientInfoException;
 
   /**
@@ -161,17 +138,49 @@ public interface QueryConnection {
    * method will also return null if the specified client info property name is not supported.
    *
    * @param name The name of the client info property to retrieve
-   * @exception SQLException if the BigQuery server returns an error when fetching the client info
-   *     value from the BigQuery server or this method is called on a closed connection
+   * @exception BigQuerySQLException if the BigQuery server returns an error when fetching the
+   *     client info value from the BigQuery server or this method is called on a closed connection
    */
-  String getClientInfo(String name) throws SQLException;
+  String getClientInfo(String name) throws BigQuerySQLException;
 
   /**
-   * Execute a SQL statement that returns a single ResultSet
+   * Execute a query dry run that does not return any BigQueryResultSet
    *
    * @param sql typically a static SQL SELECT statement
-   * @return a ResultSet that contains the data produced by the query
-   * @exception BigQueryException if a database access error occurs
+   * @exception BigQuerySQLException if a database access error occurs
    */
-  ResultSet executeSelect(String sql) throws BigQueryException;
+  void dryRun(String sql) throws BigQuerySQLException;
+
+  /**
+   * Sets query parameters for standard SQL queries.k
+   *
+   * @param queryParameters queryParameters or {@code null} for none
+   */
+  /* TODO: bigquerystorage parameters **/
+  void setQueryParameters(List<QueryParameter> queryParameters) throws BigQuerySQLException;
+
+  /**
+   * Execute a SQL statement that returns a single BigQueryResultSet
+   *
+   * @param sql typically a static SQL SELECT statement
+   * @return a BigQueryResultSet that contains the data produced by the query
+   * @exception BigQuerySQLException if a database access error occurs
+   */
+  BigQueryResultSet executeSelect(String sql) throws BigQuerySQLException;
+
+  /**
+   * Execute a SQL statement with query parameters that returns a single BigQueryResultSet
+   *
+   * @param sql typically a static SQL SELECT statement
+   * @param parameters named or positional parameters
+   * @return a BigQueryResultSet that contains the data produced by the query
+   * @exception BigQuerySQLException if a database access error occurs
+   */
+  BigQueryResultSet executeSelect(String sql, List<Parameter> parameters)
+      throws BigQuerySQLException;
+}
+
+class Parameter {
+  String name;
+  QueryParameterValue value;
 }
