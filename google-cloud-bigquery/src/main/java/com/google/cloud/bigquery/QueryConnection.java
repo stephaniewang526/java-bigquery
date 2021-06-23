@@ -152,15 +152,6 @@ public interface QueryConnection {
   void dryRun(String sql) throws BigQuerySQLException;
 
   /**
-   * Sets query parameters for standard SQL queries.k
-   *
-   * @param queryParameters queryParameters or {@code null} for none
-   */
-  /* TODO: bigquerystorage parameters **/
-  void setBigQueryStorageClientParameters(List<QueryParameter> queryParameters)
-      throws BigQuerySQLException;
-
-  /**
    * Execute a SQL statement that returns a single BigQueryResultSet
    *
    * @param sql typically a static SQL SELECT statement
@@ -179,6 +170,19 @@ public interface QueryConnection {
    */
   BigQueryResultSet executeSelect(String sql, List<Parameter> parameters)
       throws BigQuerySQLException;
+
+  /**
+   * [Optional] When set, the BigQuery Storage client Read API will be used to read the query result set when the threshold is met where a
+   * ReadSession is created with Apache Arrow format.
+   *
+   * It also sets the maximum number of table rows allowed in buffer before streaming them to the
+   * BigQueryResultSet.
+   *
+   * @param resultSetRatioThreshold total_page_size / first_page_size or {@code null} for none
+   * @param maximumRowsInBuffer maximumRowsInBuffer or {@code null} for none
+   */
+  void setBigQueryStorageClientConfiguration(Long resultSetRatioThreshold, Long maximumRowsInBuffer)
+      throws BigQueryException;
 }
 
 class Parameter {
