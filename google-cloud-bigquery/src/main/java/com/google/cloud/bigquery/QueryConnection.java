@@ -172,16 +172,22 @@ public interface QueryConnection {
       throws BigQuerySQLException;
 
   /**
-   * [Optional] When set, the BigQuery Storage client Read API will be used to read the query result set when the threshold is met where a
-   * ReadSession is created with Apache Arrow format.
+   * Sets the values necessary to determine whether table result will be read using the BigQuery
+   * Storage client Read API. The BigQuery Storage client Read API will be used to read the query
+   * result when the totalToFirstPageSizeRatio (default 3) and minimumTableSize (default 100MB)
+   * conditions set are met. A ReadSession will be created using Apache Avro data format for
+   * serialization.
    *
-   * It also sets the maximum number of table rows allowed in buffer before streaming them to the
+   * <p>It also sets the maximum number of table rows allowed in buffer before streaming them to the
    * BigQueryResultSet.
    *
-   * @param resultSetRatioThreshold total_page_size / first_page_size or {@code null} for none
+   * @param totalToFirstPageSizeRatio total_page_size / first_page_size or {@code null} for none
+   * @param minimumTableSize minimumTableSize or {@code null} for none
    * @param maximumRowsInBuffer maximumRowsInBuffer or {@code null} for none
+   * @exception BigQueryException if an error occurs in setting these values
    */
-  void setBigQueryStorageClientConfiguration(Long resultSetRatioThreshold, Long maximumRowsInBuffer)
+  void setBigQueryStorageClientConfiguration(
+      Long totalToFirstPageSizeRatio, Long minimumTableSize, Long maximumRowsInBuffer)
       throws BigQueryException;
 }
 
