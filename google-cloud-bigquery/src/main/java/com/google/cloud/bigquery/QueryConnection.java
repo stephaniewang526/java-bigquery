@@ -17,7 +17,6 @@
 package com.google.cloud.bigquery;
 
 import com.google.api.services.bigquery.model.QueryParameter;
-import java.sql.SQLClientInfoException;
 import java.util.List;
 import java.util.Map;
 
@@ -121,29 +120,6 @@ public interface QueryConnection {
   Boolean getUseQueryCache() throws BigQuerySQLException;
 
   /**
-   * Sets the value of the client info property specified by name to the value specified by value.
-   *
-   * @param name The name of the client info property to set
-   * @param value The value to set the client info property to. If the value is null, the current
-   *     value of the specified property is cleared.
-   * @exception SQLClientInfoException if the BigQuery server returns an error while setting the
-   *     client info value on the BigQuery server or this method is called on a closed connection
-   */
-  // TODO: DETERMINE IF THIS IS NEEDED
-  void setClientInfo(String name, String value) throws SQLClientInfoException;
-
-  /**
-   * Returns the value of the client info property specified by name. This method may return null if
-   * the specified client info property has not been set and does not have a default value. This
-   * method will also return null if the specified client info property name is not supported.
-   *
-   * @param name The name of the client info property to retrieve
-   * @exception BigQuerySQLException if the BigQuery server returns an error when fetching the
-   *     client info value from the BigQuery server or this method is called on a closed connection
-   */
-  String getClientInfo(String name) throws BigQuerySQLException;
-
-  /**
    * Execute a query dry run that does not return any BigQueryResultSet
    *
    * @param sql typically a static SQL SELECT statement
@@ -181,14 +157,11 @@ public interface QueryConnection {
    * <p>It also sets the maximum number of table rows allowed in buffer before streaming them to the
    * BigQueryResultSet.
    *
-   * @param totalToFirstPageSizeRatio total_page_size / first_page_size or {@code null} for none
-   * @param minimumTableSize minimumTableSize or {@code null} for none
-   * @param maximumRowsInBuffer maximumRowsInBuffer or {@code null} for none
+   * @param readClientConnectionConfiguration or {@code null} for none
    * @exception BigQueryException if an error occurs in setting these values
    */
-  void setBigQueryStorageClientConfiguration(
-      Long totalToFirstPageSizeRatio, Long minimumTableSize, Long maximumRowsInBuffer)
-      throws BigQueryException;
+  void setReadClientConnectionConfiguration(
+      ReadClientConnectionConfiguration readClientConnectionConfiguration) throws BigQueryException;
 }
 
 class Parameter {
