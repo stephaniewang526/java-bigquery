@@ -26,24 +26,12 @@ public abstract class ReadClientConnectionConfiguration implements Serializable 
   @AutoValue.Builder
   public abstract static class Builder {
 
-    /* Sets total_page_size / first_page_size threshold to use the BigQueryStorage Read Client */
-    public abstract Builder setTotalToFirstPageSizeRatio(Long totalToFirstPageSizeRatio);
-
-    /* Sets the minimum table size threshold to use the BigQueryStorage Read Client */
-    public abstract Builder setMinimumTableSize(Long minimumTableSize);
-
     /* Sets the buffer size during streaming from the BigQueryStorage Read client */
     public abstract Builder setBufferSize(Long bufferSize);
 
     /** Creates a {@code ReadClientConnectionConfiguration} object. */
     public abstract ReadClientConnectionConfiguration build();
   }
-
-  /** Returns the totalToFirstPageSizeRatio in this configuration. */
-  public abstract Long getTotalToFirstPageSizeRatio();
-
-  /** Returns the minimumTableSize in this configuration. */
-  public abstract Long getMinimumTableSize();
 
   /** Returns the bufferSize in this configuration. */
   public abstract Long getBufferSize();
