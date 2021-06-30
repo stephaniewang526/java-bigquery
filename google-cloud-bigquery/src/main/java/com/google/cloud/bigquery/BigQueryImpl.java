@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.cloud.bigquery;
 
 import static com.google.cloud.RetryHelper.runWithRetries;
@@ -458,7 +457,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               serviceOptions.getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               serviceOptions.getClock());
       String cursor = result.x();
       return new PageImpl<>(
@@ -576,6 +575,30 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                   completeRoutineId.getProject(),
                   completeRoutineId.getDataset(),
                   completeRoutineId.getRoutine());
+            }
+          },
+          getOptions().getRetrySettings(),
+          EXCEPTION_HANDLER,
+          getOptions().getClock());
+    } catch (RetryHelper.RetryHelperException e) {
+      throw BigQueryException.translateAndThrow(e);
+    }
+  }
+
+  @Override
+  public boolean delete(JobId jobId) {
+    final JobId completeJobId =
+        jobId.setProjectId(
+            Strings.isNullOrEmpty(jobId.getProject())
+                ? getOptions().getProjectId()
+                : jobId.getProject());
+    try {
+      return runWithRetries(
+          new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
+              return bigQueryRpc.deleteJob(
+                  completeJobId.getProject(), completeJobId.getJob(), completeJobId.getLocation());
             }
           },
           getOptions().getRetrySettings(),
@@ -1256,7 +1279,7 @@ final class BigQueryImpl extends BaseService<BigQueryOptions> implements BigQuer
                 }
               },
               getOptions().getRetrySettings(),
-              EXCEPTION_HANDLER,
+              BigQueryBaseService.BIGQUERY_EXCEPTION_HANDLER,
               getOptions().getClock());
     } catch (RetryHelperException e) {
       throw BigQueryException.translateAndThrow(e);
